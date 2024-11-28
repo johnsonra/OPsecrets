@@ -40,7 +40,7 @@ get_secret <- function(secret_name, ...)
 #' If it is still having trouble, the `OP` environment variable can be set to the path to the `op` executable.
 #' To find the install path on Windows, run `(Get-Command op).Source` in the power shell and copy the path returned (ending with "\" and excluding "op.exe").
 #'
-#' To permanently add `OP` to the environment variables, open .Renviron with `usethis::edit_r_environ()` and add a new line with the something like the following (making sure you put "\\" for each backslash on Windows):
+#' To permanently add `OP` to the environment variables, open .Renviron with `usethis::edit_r_environ()` and add a new line with something like the following (making sure you put "\\" for each backslash on Windows):
 #' "OP=C:\\path\\to\\op\\" (Windows) or "OP=/path/to/op/" (Unix-like systems).
 #' If `OP` isn't defined, `Sys.getenv("OP")` will return "", and the system call will look in the default PATH for `op`.
 #'

@@ -5,7 +5,7 @@ Sys.setenv(SOME_SECRET='abc123')
 test_that("get_secret returns the correct secret", {
   expect_equal(get_secret('SOME_SECRET'), 'abc123')
 
-  # test that `op` is not called when the secret is in the environment and additional arguments are not provided for `op`
+  # test that `op` is not called when the secret is in the environment and additional arguments are *not* provided for `op`
   testval <- expect_error(get_secret('A_NONEXISTANT_SECRET'))
 
   # test that `op` is called when the secret is not in the environment and additional arguments are provided for `op`
