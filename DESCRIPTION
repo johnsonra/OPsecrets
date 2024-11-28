@@ -1,0 +1,17 @@
+Package: OPsecrets
+Type: Package
+Title: Interface with 1Password Secrets Manager
+Version: 0.1.0
+Authors@R: c(person('Randy', 'Johnson', email = 'johnson@hood.edu',
+                    role = c('cre', 'aut')))
+Description: This package interfaces with 1Password Secrets Manager, `op`.
+License: MIT + file LICENSE
+Depends: R (>= 4.4)
+Encoding: UTF-8
+LazyData: true
+URL: https://github.com/johnsonra/OPsecrets
+BugReports: https://github.com/johnsonra/OPsecrets/issues
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+RoxygenNote: 7.3.2
