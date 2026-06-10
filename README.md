@@ -1,8 +1,28 @@
 # OPsecrets
 
 
-The `OPsecrets` R package was developed because I found myself needing
-to retrieve API keys and other sensitive information from 1Password for
+<!--
+# To render the quarto file, README.qmd,
+# set up required virtual environment in the terminal with
+
+```bash
+python -m venv .venv
+.venv/Scripts/Activate    # (Windows)
+source .venv/bin/activate # (Linux/OS X)
+
+python -m pip install "git+https://github.com/johnsonra/OPsecrets.git@python"
+```
+
+You will also need the R package installed with
+
+```R
+remotes::install_github("johnsonra/OPsecrets", ref = "R")
+```
+-->
+
+
+The `OPsecrets` package was developed because I found myself needing to
+retrieve API keys and other sensitive information from 1Password for
 various projects when I was developing Shiny dashboards on my laptop.
 Then when the code was deployed to a Posit server, I had to make slight
 changes to the code to retrieve these secrets from the local
@@ -14,27 +34,31 @@ line tool. A single call to `get_secret` can be used to retrieve secrets
 from an environmental variable, or if the environmental variable is
 undefined, from 1Password using the `op` command line tool.
 
-This package is designed to work on Unix-like systems (e.g. Linux,
+This repository has implementations for both R and python on separate
+branches and is designed to work on Unix-like systems (e.g. Linux,
 macOS) and Windows, but it may require additional configuration on
 Windows to work with 1Password.
 
-## Installation
+Both versions provide the same core workflow: look for a secret in the
+environment first, then fall back to 1Password through the `op`
+command-line tool.
 
-To install the package, you can use the `install_github` command from
-the `remotes` package in R as follows (first install the `remotes`
-package if you haven’t already):
+## Set up the 1Password CLI
 
-    remotes::install_github("johsonra/OPsecrets")
+Install the 1Password `op` command-line tool before using either branch:
 
-You will also want to install the `op` command line tool from 1Password.
-You can find instructions for installing the `op` command line tool
-[here](https://support.1password.com/command-line-getting-started/).
+https://developer.1password.com/docs/cli/get-started/
+
+After installing it, confirm that `op` is available from your terminal:
+
+``` bash
+op --version
+```
 
 ### Windows
 
-If you find that `op` isn’t in the default PATH on Windows, `get_secret`
-will look for the `OP` environment variable in R for the full path to
-the `op` executable.
+If `op` is not on the default `PATH`, set the `OP` environment variable
+to the directory that contains the executable.
 
 1.  First, verify that `op` works in a Windows terminal running
     `powershell` with `op --version` as described on the [1Password
@@ -50,86 +74,126 @@ the `op` executable.
     the path returned (ending with “\\” and excluding “op.exe” - for
     example “C:\path\to\op\\”).
 
-3.  To permanently add `OP` to the environment variables in R, open
-    `.Renviron` with `usethis::edit_r_environ()` and add a new line with
-    something like the following (making sure you put “`\\`” for each
-    backslash): “`OP=C:\\path\\to\\op\\`”.
+In R, you can persist that value in `.Renviron`:
 
-4.  Restart R and run `Sys.getenv("OP")` to verify that the `OP`
-    environment variable is set correctly.
+``` r
+usethis::edit_r_environ()
 
-## Usage
+# Add a line such as:
+# OP=C:\\Program Files\\1Password\\
+```
 
-Once you have the package installed, you will want to ensure the secrets
-you want to access are stored correctly for the system you are running.
-For example, for developing and testing code on my laptop, prefer to
-store the secrets in 1Password. For deploying code to a Posit server, I
-prefer to securely store the secrets in the environment.
+In Python, you can set it in the shell or your environment
+configuration:
+
+``` powershell
+$env:OP = 'C:\Program Files\1Password\'
+```
+
+## Store secrets
 
 ### 1Password
 
-To store a secret in 1Password, create a new item in 1Password
-(typically a password, but this could also be included as part of a
-login item). For example, I created a new item with the title
-“OPsecrets” and a password called “test_secret” in my Private vault.
+To store a secret in 1Password, create an item in a vault and note its
+vault, item, and field names. For example, the screenshots below use an
+item titled `OPsecrets` with a field named `test_secret` in the
+`Private` vault.
 
 <img src="img/1password_item.png" width="400" />
 
 ### Environment
 
-To store a secret in the environment, you can set the secret as an
-environmental variable. For example, in my testing scripts I refer to
-the environment variable, `SOME_SECRET`. To set this on temporarily, you
-can use
+You can also store a secret in the environment. For example, both
+examples below use the environmental variable, `SOME_SECRET`.
 
-    Sys.setenv(SOME_SECRET='abc123')
+In R:
 
-or to set an environmental variable permanently on a Posit shiny server,
-you can do this securely using the Vars module. Open your dashboard as
-an administrator in Posit, click on the settings icon at the top right
-of the page and then the “Vars” module. Enter the name and value for
-your environmental variable and click “Add Variable”.
+``` r
+Sys.setenv(SOME_SECRET = "key:1234567890")
+```
+
+In Python:
+
+``` python
+import os
+
+os.environ["SOME_SECRET"] = "key:1234567890"
+```
+
+On Posit Connect or Posit Shiny Server, you can also store environment
+variables through the Vars interface.
 
 <img src="img/posit_setenv.png" width="300" />
 
-You can also set the environmental variable in the `.Renviron` file
-(e.g. using `usethis::edit_r_environ()`), but this is stored in plain
-text and is not secure.
+## `R` usage
 
-### Retrieving Secrets
-
-Once we have set up our various systems properly we can retrieve the
-secret with the `get_secret` function. Following our example above, lets
-say that we want to retrieve an API key that will be stored either in an
-environmental variable (when run on our Posit server) or in 1Password
-(when run locally).
-
-We can do this with a single call to `get_secret`. This will first look
-for the the environment variable `SOME_SECRET`. On our Posit server this
-return that value. `SOME_SECRET` will not be defined when running
-locally, so `get_secret` will look in the “Private” vault of 1Password
-for an item called “OPsecrets” and return the value for “test_secret”.
+Install the R package from the `R` branch with:
 
 ``` r
-api_key <- get_secret('SOME_SECRET', 'Private', 'OPsecrets', 'test_secret')
+remotes::install_github("johnsonra/OPsecrets", ref = "R")
 
+library(OPsecrets)
+```
+
+Once installed, use `get_secret()` to prefer the environment and fall
+back to 1Password:
+
+``` r
+library(OPsecrets)
+
+api_key <- get_secret("SOME_SECRET", "Private", "OPsecrets", "test_secret")
+print(api_key)
+```
+
+    [1] "key:1234567890"
+
+To read directly from 1Password:
+
+``` r
+api_key <- op("Private", "OPsecrets", "test_secret")
 print(api_key)
 ```
 
     [1] "abc123"
 
-### Acessing `op` directly
+## `python` usage
 
-If you want to access the `op` command line tool directly, you can use
-the `op` function. Again, assuming we have our API key called
-“test_secret” in an item called “OPsecrets” in the “Private” vault of
-1Password, we can retrieve this secret directly from 1Password with the
-following command in R:
+Install the Python package from the `python` branch:
 
-``` r
-api_key <- op('Private', 'OPsecrets', 'test_secret')
+``` bash
+python -m pip install "git+https://github.com/johnsonra/OPsecrets.git@python"
+```
 
+Once installed, the Python package follows the same pattern:
+
+``` python
+from opsecrets import get_secret
+
+api_key = get_secret("SOME_SECRET", "Private", "OPsecrets", "test_secret")
 print(api_key)
 ```
 
-    [1] "abc123"
+    key:1234567890
+
+The environment-first behavior can be illustrated by chosing a variable
+that does not exist in the environment:
+
+``` python
+api_key = get_secret("SOME_OTHER_SECRET", "Private", "OPsecrets", "test_secret")
+print(api_key)
+```
+
+    abc123
+
+The 1Password lookup uses an `op://vault/item/field` reference built
+from the path parts. To read directly from 1Password with the Python
+package:
+
+``` python
+from opsecrets import op
+
+api_key = op("Private", "OPsecrets", "test_secret")
+print(api_key)
+```
+
+    abc123
